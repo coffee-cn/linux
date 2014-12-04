@@ -1,9 +1,81 @@
-*.tar
-*.tar.*
-*.zip
-*.tgz
-*.log
-*.log.*
-*.sig
-pkg/
-src/
+#!/bin/bash
+disk=`fdisk -l | grep "Disk /dev/sd[a-z]"`
+for i in `ls /dev/[sh]d[a-z]`;do
+    echo $i
+done
+diskpart() {
+dd if=/dev/zero of=/dev/$chof bs=600 count=1
+echo 'n
+p
+1
++512M
+n
+p
+2
++512M
+n
+p
+3
++2G
+t
+2
+82
+w
+' | fdisk $chof
+}
+Mount() {
+num=`grep "$chof" /etc/mtab | wc -l`
+for k in `seq $[$num+1]` ;do
+        fuser -km $chof$k
+        umount $chof$k
+        done
+}
+while true ;do
+read -p "Please Choose a Disk :" chof
+case $chof in
+/dev/[sh]d[a-z])
+        [  -e $chof ] && break || continue ;;
+quit)
+        exit 5;;
+*)
+        continue;;
+esac
+done
+fdisk -l $chof
+while true; do
+cat << EOF
+##############################################
+#       this will distory all your data!!    #
+#                BE CAREFUL!!                #
+#             yes|y) continue                #
+#              no|no ) stop                  #
+##############################################
+EOF
+read -p "Enter Your Choice {yes|no}: " chos
+case $chos in
+yes|y)
+        Mount
+        diskpart
+        break ;;
+no|n)
+        exit 3 ;;
+*)
+        echo "You must give a choice"
+        continue  ;;
+esac
+done
+[ ! -d /mnt/boot ] && mkdir /mnt/boot
+[ ! -d /mnt/sysroot ] && mkdir /mnt/sysroot
+for j in {1..3};do
+        if [ $j -eq 1 ]; then
+                mke2fs -t ext4 $chof$j
+                mount $chof$j /mnt/boot
+        elif [ $j -eq 2 ]; then
+                mkswap $chof$j
+        else
+                mke2fs -t ext4 $chof$j
+                mount $chof$j /mnt/sysroot
+        fi
+done
+echo "partision successfully"
+                               
