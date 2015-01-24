@@ -1,17 +1,20 @@
 #!/bin/bash
-if [ ! -e $1  ] ;then
-touch $2 && echo "#!/bin/bash" > $1 && mv $1 $1.sh && vim $1.sh
+#判断文件是否存在，如果不存在则创建，添加#!/bin/bash重命名为.sh 用vim打开
+if [ ! -e $1 ] ;then
+        echo "#!/bin/bash" > $1 && mv $1 $1.sh && vim $1.sh
 else
+#如果存在则判断是否为空，并判断是否以#!/bin/bash开头，是的话则直接以vim打开，否>则提示错误
         if [ ! -z $1 ];then
                 fsl=`head -1 $1`
                 case $fsl in
                 "#!/bin/bash")
                         vim $1;;
                 *)
-                echo "error"
-                exit 4 ;;
+                        echo "error"
+                        exit 4 ;;
                 esac
         else
+        #为空则添加bash头
                 echo "#!/bin/bash" > $1
         fi
 fi
